@@ -1,0 +1,717 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malayalam Master Vocabulary & Voice Assistant</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, rgba(6, 78, 59, 0.85), rgba(4, 47, 46, 0.9)), url('https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-emerald-900/85 backdrop-blur-md text-white shadow-xl py-6 px-4 border-b border-emerald-700/50 sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">🌴</span>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight">Malayalam Master Voice App</h1>
+                    <p class="text-emerald-200 text-xs">Explore 250+ vocabulary words, audio pronunciation, and interactive speech practice</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- iOS Mandatory Audio Activation Trigger Button -->
+                <button onclick="unlockAudioContext()" class="bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold px-4 py-2 rounded-xl text-xs shadow-md transition-all">
+                    🔓 Tap First to Enable Audio (iPhone)
+                </button>
+                <div class="bg-emerald-800/90 px-4 py-2 rounded-xl text-sm border border-emerald-600/60 shadow-inner">
+                    <span>📚 Stored:</span> <span id="word-count" class="font-bold text-emerald-300">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-5xl mx-auto w-full p-4 sm:p-6 flex-grow space-y-6">
+
+        <!-- Category Filter Tabs at the Top -->
+        <section class="glass-panel p-4 sm:p-5 rounded-2xl shadow-lg">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Filter by Category</h3>
+            <div id="category-tabs" class="flex flex-wrap gap-2">
+                <!-- Tabs will be dynamically populated here -->
+            </div>
+        </section>
+
+        <!-- Add & Translate Card -->
+        <section class="glass-panel p-6 sm:p-8 rounded-2xl shadow-xl">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <span class="bg-emerald-100 text-emerald-700 p-2 rounded-lg text-sm">➕</span>
+                <span>Add & Automatically Translate New Phrase</span>
+            </h2>
+            <form id="translator-form" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">English Word or Phrase</label>
+                        <input type="text" id="english-input" required placeholder="e.g., Where is the fresh seafood market?" 
+                            class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Category</label>
+                        <select id="category-input" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white transition-all shadow-sm">
+                            <option value="Essentials & Greetings">Essentials & Greetings</option>
+                            <option value="Pronouns & Verbs">Pronouns & Verbs</option>
+                            <option value="Food, Dining & Seafood">Food, Dining & Seafood</option>
+                            <option value="Numbers">Numbers</option>
+                            <option value="Shopping & Market">Shopping & Market</option>
+                            <option value="Travel & Directions">Travel & Directions</option>
+                            <option value="Time & Days">Time & Days</option>
+                            <option value="Family & People">Family & People</option>
+                            <option value="House & Nature">House & Nature</option>
+                            <option value="Practical Phrases">Practical Phrases</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="submit" id="submit-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+                        <span>Translate & Add</span>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Search & Reset Controls -->
+        <section class="flex flex-col sm:flex-row justify-between items-center gap-4 glass-panel p-4 rounded-2xl shadow-md">
+            <div class="w-full sm:w-1/2 relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">🔍</span>
+                <input type="text" id="search-input" placeholder="Search saved phrases..." 
+                    class="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm bg-white/80 transition-all">
+            </div>
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <button onclick="resetToDefault()" class="text-xs font-semibold text-slate-600 hover:text-emerald-700 bg-white border border-slate-200 px-3 py-2 rounded-xl transition-all shadow-sm">
+                    🔄 Reload Master Dictionary
+                </button>
+                <button onclick="clearAllData()" class="text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-xl transition-all shadow-sm">
+                    🗑️ Clear All
+                </button>
+            </div>
+        </section>
+
+        <!-- Vocabulary Table / List Section -->
+        <section class="glass-panel rounded-2xl shadow-xl overflow-hidden border border-white/40">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100/80 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                            <th class="py-4 px-5">English</th>
+                            <th class="py-4 px-5">Malayalam Script</th>
+                            <th class="py-4 px-5">Pronunciation</th>
+                            <th class="py-4 px-5">Category</th>
+                            <th class="py-4 px-5 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vocabulary-list" class="divide-y divide-slate-100 text-sm bg-white/60">
+                        <!-- Dynamic items injected here -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="empty-state" class="hidden p-16 text-center text-slate-400 font-medium">
+                No words found in this category or search query!
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Practice Feedback Modal Overlay -->
+    <div id="practice-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="glass-panel rounded-3xl max-w-md w-full p-8 space-y-6 shadow-2xl border border-white">
+            <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <span>🎤</span> Voice Pronunciation Practice
+                </h3>
+                <button onclick="closePracticeModal()" class="text-slate-400 hover:text-slate-600 font-bold text-2xl">&times;</button>
+            </div>
+            <div class="text-center py-2 space-y-3">
+                <p class="text-xs uppercase text-slate-400 font-bold tracking-wider">Target Malayalam Phrase</p>
+                <p id="practice-target" class="text-2xl font-extrabold text-emerald-700"></p>
+                <div id="mic-status" class="py-6 px-4 bg-emerald-50 rounded-2xl text-emerald-800 font-semibold animate-pulse border border-emerald-200">
+                    Listening... Speak now into your microphone!
+                </div>
+                <div id="practice-result" class="hidden p-4 rounded-xl bg-slate-100 text-sm font-medium text-slate-700 shadow-inner"></div>
+            </div>
+            <div class="flex justify-end pt-2">
+                <button onclick="closePracticeModal()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold px-6 py-3 rounded-xl text-sm transition-all shadow-md">
+                    Close Practice Window
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-xs text-emerald-100/80 font-medium">
+        Malayalam Master Voice App &bull; Kerala Travel & Cultural Companion
+    </footer>
+
+    <!-- Application Script Logic -->
+    <script>
+        const defaultVocabulary = [
+            { id: 1, english: "Hello / Greetings", malayalam: "നമസ്കാരം", phonetic: "Namaskaram", category: "Essentials & Greetings" },
+            { id: 2, english: "Yes", malayalam: "അതെ", phonetic: "Athe", category: "Essentials & Greetings" },
+            { id: 3, english: "No", malayalam: "ഇല്ല", phonetic: "Illa", category: "Essentials & Greetings" },
+            { id: 4, english: "Thank you", malayalam: "നന്ദി", phonetic: "Nandi", category: "Essentials & Greetings" },
+            { id: 5, english: "Please", malayalam: "ദയവായി", phonetic: "Dayavaayi", category: "Essentials & Greetings" },
+            { id: 6, english: "Sorry", malayalam: "ക്ഷമിക്കണം", phonetic: "Kshamikkanam", category: "Essentials & Greetings" },
+            { id: 7, english: "Excuse me", malayalam: "ഒരു നിമിഷം", phonetic: "Oru nimisham", category: "Essentials & Greetings" },
+            { id: 8, english: "Good morning", malayalam: "സുപ്രഭാതം", phonetic: "Suprabhatam", category: "Essentials & Greetings" },
+            { id: 9, english: "Good night", malayalam: "ശുഭരാത്രി", phonetic: "Shubharathri", category: "Essentials & Greetings" },
+            { id: 10, english: "Welcome", malayalam: "സ്വാഗതം", phonetic: "Swagatam", category: "Essentials & Greetings" },
+            { id: 11, english: "Goodbye", malayalam: "പോയിട്ട് വരാം", phonetic: "Poyittu varam", category: "Essentials & Greetings" },
+            { id: 12, english: "Okay", malayalam: "ശരി", phonetic: "Shari", category: "Essentials & Greetings" },
+            { id: 13, english: "Maybe", malayalam: "ആയിരിക്കാം", phonetic: "Aayirikkam", category: "Essentials & Greetings" },
+            { id: 14, english: "Always", malayalam: "എപ്പോഴും", phonetic: "Eppozhum", category: "Essentials & Greetings" },
+            { id: 15, english: "Never", malayalam: "ഒരിക്കലുംില്ല", phonetic: "Orikkalumilla", category: "Essentials & Greetings" },
+            { id: 16, english: "Now", malayalam: "ഇപ്പോൾ", phonetic: "Ippol", category: "Essentials & Greetings" },
+            { id: 17, english: "Later", malayalam: "പിന്നീട്", phonetic: "Pinneed", category: "Essentials & Greetings" },
+            { id: 18, english: "Today", malayalam: "ഇന്ന്", phonetic: "Innu", category: "Essentials & Greetings" },
+            { id: 19, english: "Tomorrow", malayalam: "നാളെ", phonetic: "Naale", category: "Essentials & Greetings" },
+            { id: 20, english: "Yesterday", malayalam: "ഇന്നലെ", phonetic: "Innale", category: "Essentials & Greetings" },
+            { id: 21, english: "Here", malayalam: "ഇവിടെ", phonetic: "Ivide", category: "Essentials & Greetings" },
+            { id: 22, english: "There", malayalam: "അവിടെ", phonetic: "Avide", category: "Essentials & Greetings" },
+            { id: 23, english: "Friend", malayalam: "സുഹൃത്ത്", phonetic: "Suhruth", category: "Essentials & Greetings" },
+            { id: 24, english: "Family", malayalam: "കുടുംബം", phonetic: "Kudumbam", category: "Essentials & Greetings" },
+            { id: 25, english: "Name", malayalam: "പേര്", phonetic: "Peru", category: "Essentials & Greetings" },
+            { id: 26, english: "I", malayalam: "ഞാൻ", phonetic: "Njan", category: "Pronouns & Verbs" },
+            { id: 27, english: "You", malayalam: "നിങ്ങൾ / നീ", phonetic: "Ningal / Nee", category: "Pronouns & Verbs" },
+            { id: 28, english: "He", malayalam: "അവൻ", phonetic: "Avan", category: "Pronouns & Verbs" },
+            { id: 29, english: "She", malayalam: "അവൾ", phonetic: "Aval", category: "Pronouns & Verbs" },
+            { id: 30, english: "We", malayalam: "ഞങ്ങൾ", phonetic: "Njangal", category: "Pronouns & Verbs" },
+            { id: 31, english: "They", malayalam: "അവർ", phonetic: "Avar", category: "Pronouns & Verbs" },
+            { id: 32, english: "What?", malayalam: "എന്ത്?", phonetic: "Enthu?", category: "Pronouns & Verbs" },
+            { id: 33, english: "Who?", malayalam: "ആര്?", phonetic: "Aaru?", category: "Pronouns & Verbs" },
+            { id: 34, english: "Where?", malayalam: "എവിടെ?", phonetic: "Evide?", category: "Pronouns & Verbs" },
+            { id: 35, english: "When?", malayalam: "എപ്പോൾ?", phonetic: "Eppol?", category: "Pronouns & Verbs" },
+            { id: 36, english: "Why?", malayalam: "എന്തിന്?", phonetic: "Enthinu?", category: "Pronouns & Verbs" },
+            { id: 37, english: "How?", malayalam: "എങ്ങനെ?", phonetic: "Engane?", category: "Pronouns & Verbs" },
+            { id: 38, english: "How much? / How many?", malayalam: "എത്ര?", phonetic: "Ethra?", category: "Pronouns & Verbs" },
+            { id: 39, english: "Go", malayalam: "പോവുക", phonetic: "Povuka", category: "Pronouns & Verbs" },
+            { id: 40, english: "Come", malayalam: "വരുക", phonetic: "Varuka", category: "Pronouns & Verbs" },
+            { id: 41, english: "Eat", malayalam: "കഴിക്കുക", phonetic: "Kazhikkuka", category: "Pronouns & Verbs" },
+            { id: 42, english: "Drink", malayalam: "കുടിക്കുക", phonetic: "Kudikkuka", category: "Pronouns & Verbs" },
+            { id: 43, english: "Sleep", malayalam: "ഉറങ്ങുക", phonetic: "Uranguka", category: "Pronouns & Verbs" },
+            { id: 44, english: "Sit", malayalam: "ഇരിക്കുക", phonetic: "Irikkuka", category: "Pronouns & Verbs" },
+            { id: 45, english: "Stand", malayalam: "നിൽക്കുക", phonetic: "Nilkkuka", category: "Pronouns & Verbs" },
+            { id: 46, english: "Read", malayalam: "വായിക്കുക", phonetic: "Vayikkuka", category: "Pronouns & Verbs" },
+            { id: 47, english: "Write", malayalam: "എഴുതുക", phonetic: "Ezhuthuka", category: "Pronouns & Verbs" },
+            { id: 48, english: "Speak", malayalam: "സംസാരിക്കുക", phonetic: "Samsarikkuka", category: "Pronouns & Verbs" },
+            { id: 49, english: "Listen", malayalam: "കേൾക്കുക", phonetic: "Kelkuka", category: "Pronouns & Verbs" },
+            { id: 50, english: "Understand", malayalam: "മനസ്സിലാവുക", phonetic: "Manassilavuka", category: "Pronouns & Verbs" },
+            { id: 51, english: "Food", malayalam: "ഭക്ഷണം", phonetic: "Bhakshanam", category: "Food, Dining & Seafood" },
+            { id: 52, english: "Water", malayalam: "വെള്ളം", phonetic: "Vellam", category: "Food, Dining & Seafood" },
+            { id: 53, english: "Rice", malayalam: "ചോറ്", phonetic: "Choru", category: "Food, Dining & Seafood" },
+            { id: 54, english: "Fish", malayalam: "മീൻ", phonetic: "Meen", category: "Food, Dining & Seafood" },
+            { id: 55, english: "Prawns / Shrimp", malayalam: "ചെമ്മീൻ", phonetic: "Chemmeen", category: "Food, Dining & Seafood" },
+            { id: 56, english: "Crab", malayalam: "ഞണ്ട്", phonetic: "Njaandu", category: "Food, Dining & Seafood" },
+            { id: 57, english: "Squid", malayalam: "കണവ", phonetic: "Kanava", category: "Food, Dining & Seafood" },
+            { id: 58, english: "Spicy", malayalam: "എരിവുള്ള", phonetic: "Erivulla", category: "Food, Dining & Seafood" },
+            { id: 59, english: "Not spicy", malayalam: "എരിവില്ലാത്ത", phonetic: "Erivillatha", category: "Food, Dining & Seafood" },
+            { id: 60, english: "Hot (Temperature)", malayalam: "ചൂടുള്ള", phonetic: "Chudulla", category: "Food, Dining & Seafood" },
+            { id: 61, english: "Cold", malayalam: "തണുത്ത", phonetic: "Thanutha", category: "Food, Dining & Seafood" },
+            { id: 62, english: "Sweet", malayalam: "മധുരമുള്ള", phonetic: "Madhuramulla", category: "Food, Dining & Seafood" },
+            { id: 63, english: "Salt", malayalam: "ഉപ്പ്", phonetic: "Uppu", category: "Food, Dining & Seafood" },
+            { id: 64, english: "Sugar", malayalam: "പഞ്ചസാര", phonetic: "Panchasara", category: "Food, Dining & Seafood" },
+            { id: 65, english: "Milk", malayalam: "പാൽ", phonetic: "Paal", category: "Food, Dining & Seafood" },
+            { id: 66, english: "Tea", malayalam: "ചായ", phonetic: "Chaaya", category: "Food, Dining & Seafood" },
+            { id: 67, english: "Coffee", malayalam: "കാപ്പി", phonetic: "Kaapi", category: "Food, Dining & Seafood" },
+            { id: 68, english: "Breakfast", malayalam: "പ്രഭാതഭക്ഷണം", phonetic: "Prabhatha bhakshanam", category: "Food, Dining & Seafood" },
+            { id: 69, english: "Lunch", malayalam: "ഉച്ചഭക്ഷണം", phonetic: "Ucha bhakshanam", category: "Food, Dining & Seafood" },
+            { id: 70, english: "Dinner", malayalam: "അത്താഴം", phonetic: "Athaazham", category: "Food, Dining & Seafood" },
+            { id: 71, english: "Restaurant", malayalam: "ഹോട്ടൽ", phonetic: "Hotel", category: "Food, Dining & Seafood" },
+            { id: 72, english: "Menu", malayalam: "മെനു", phonetic: "Menu", category: "Food, Dining & Seafood" },
+            { id: 73, english: "Bill", malayalam: "ബില്ല്", phonetic: "Bill", category: "Food, Dining & Seafood" },
+            { id: 74, english: "Delicious", malayalam: "രുചികരമായ", phonetic: "Ruchikaramaya", category: "Food, Dining & Seafood" },
+            { id: 75, english: "Vegetarian", malayalam: "വെജിറ്റേറിയൻ", phonetic: "Vegetarian", category: "Food, Dining & Seafood" },
+            { id: 76, english: "Zero", malayalam: "പൂജ്യം", phonetic: "Pujyam", category: "Numbers" },
+            { id: 77, english: "One", malayalam: "ഒന്ന്", phonetic: "Onnu", category: "Numbers" },
+            { id: 78, english: "Two", malayalam: "രണ്ട്", phonetic: "Randu", category: "Numbers" },
+            { id: 79, english: "Three", malayalam: "മൂന്ന്", phonetic: "Moonnu", category: "Numbers" },
+            { id: 80, english: "Four", malayalam: "നാല്", phonetic: "Naalu", category: "Numbers" },
+            { id: 81, english: "Five", malayalam: "അഞ്ച്", phonetic: "Anju", category: "Numbers" },
+            { id: 82, english: "Six", malayalam: "ആറ്", phonetic: "Aaru", category: "Numbers" },
+            { id: 83, english: "Seven", malayalam: "ഏഴ്", phonetic: "Ezhu", category: "Numbers" },
+            { id: 84, english: "Eight", malayalam: "എട്ട്", phonetic: "Ettu", category: "Numbers" },
+            { id: 85, english: "Nine", malayalam: "ഒன்பது", phonetic: "Onbathu", category: "Numbers" },
+            { id: 86, english: "Ten", malayalam: "പത്ത്", phonetic: "Pathu", category: "Numbers" },
+            { id: 87, english: "Eleven", malayalam: "പതിനൊന്ന്", phonetic: "Pathinonnu", category: "Numbers" },
+            { id: 88, english: "Twelve", malayalam: "പന്ത്രണ്ട്", phonetic: "Panthrandu", category: "Numbers" },
+            { id: 89, english: "Thirteen", malayalam: "പതിമൂന്ന്", phonetic: "Pathimoonnu", category: "Numbers" },
+            { id: 90, english: "Fourteen", malayalam: "പതിനാറ്", phonetic: "Pathinaaru", category: "Numbers" },
+            { id: 91, english: "Fifteen", malayalam: "പതിനഞ്ച്", phonetic: "Pathinanju", category: "Numbers" },
+            { id: 92, english: "Sixteen", malayalam: "പതിനാറ്", phonetic: "Pathinaaru", category: "Numbers" },
+            { id: 93, english: "Seventeen", malayalam: "പതിനേഴ്", phonetic: "Pathinezhu", category: "Numbers" },
+            { id: 94, english: "Eighteen", malayalam: "പതിനെട്ട്", phonetic: "Pathinettu", category: "Numbers" },
+            { id: 95, english: "Nineteen", malayalam: "പത്തൊൻപത്", phonetic: "Pathonpathu", category: "Numbers" },
+            { id: 96, english: "Twenty", malayalam: "ഇരുപത്", phonetic: "Irupathu", category: "Numbers" },
+            { id: 97, english: "Thirty", malayalam: "മുപ്പത്", phonetic: "Muppathu", category: "Numbers" },
+            { id: 98, english: "Forty", malayalam: "നാല്‍പത്", phonetic: "Naalpathu", category: "Numbers" },
+            { id: 99, english: "Fifty", malayalam: "അമ്പത്", phonetic: "Ampathu", category: "Numbers" },
+            { id: 100, english: "Hundred", malayalam: "നൂറ്", phonetic: "Nooru", category: "Numbers" },
+            { id: 101, english: "How much is this?", malayalam: "ഇതിന് എത്രയാകും?", phonetic: "Ithinu ethrayaakum?", category: "Shopping & Market" },
+            { id: 102, english: "Expensive", malayalam: "വിലകൂടിയത്", phonetic: "Vila koodiyathu", category: "Shopping & Market" },
+            { id: 103, english: "Cheap", malayalam: "വിലകുറഞ്ഞത്", phonetic: "Vila kuranjathu", category: "Shopping & Market" },
+            { id: 104, english: "Money", malayalam: "പണം", phonetic: "Panam", category: "Shopping & Market" },
+            { id: 105, english: "Rupee", malayalam: "രൂപ", phonetic: "Roopa", category: "Shopping & Market" },
+            { id: 106, english: "Discount", malayalam: "വിലക്കുറവ്", phonetic: "Vila kuravu", category: "Shopping & Market" },
+            { id: 107, english: "Cash", malayalam: "പണം", phonetic: "Panam", category: "Shopping & Market" },
+            { id: 108, english: "Card", malayalam: "കാർഡ്", phonetic: "Card", category: "Shopping & Market" },
+            { id: 109, english: "Market", malayalam: "മാർക്കറ്റ് / ചന്ത", phonetic: "Market / Chanda", category: "Shopping & Market" },
+            { id: 110, english: "Shop", malayalam: "കട", phonetic: "Kada", category: "Shopping & Market" },
+            { id: 111, english: "Fruit", malayalam: "പഴം", phonetic: "Pazham", category: "Shopping & Market" },
+            { id: 112, english: "Vegetable", malayalam: "പച്ചക്കറി", phonetic: "Pachakkari", category: "Shopping & Market" },
+            { id: 113, english: "Clothes", malayalam: "വസ്ത്രങ്ങൾ", phonetic: "Vasthrangal", category: "Shopping & Market" },
+            { id: 114, english: "Shoes", malayalam: "ചെരുപ്പ്", phonetic: "Cheruppu", category: "Shopping & Market" },
+            { id: 115, english: "Electronics", malayalam: "ഇലക്ട്രോണിക്സ്", phonetic: "Electronics", category: "Shopping & Market" },
+            { id: 116, english: "Mall", malayalam: "മാൾ", phonetic: "Mall", category: "Shopping & Market" },
+            { id: 117, english: "Bag", malayalam: "സഞ്ചി / ബാഗ്", phonetic: "Sanchi / Bag", category: "Shopping & Market" },
+            { id: 118, english: "Big", malayalam: "വലുത്", phonetic: "Valuthu", category: "Shopping & Market" },
+            { id: 119, english: "Small", malayalam: "ചെറുത്", phonetic: "Cheruthu", category: "Shopping & Market" },
+            { id: 120, english: "Good", malayalam: "നല്ലത്", phonetic: "Nallathu", category: "Shopping & Market" },
+            { id: 121, english: "Bad", malayalam: "മോശം", phonetic: "Mosham", category: "Shopping & Market" },
+            { id: 122, english: "New", malayalam: "പുതിയത്", phonetic: "Puthiyathu", category: "Shopping & Market" },
+            { id: 123, english: "Old", malayalam: "പഴയത്", phonetic: "Pazhayathu", category: "Shopping & Market" },
+            { id: 124, english: "Open", malayalam: "തുറന്നിരിക്കുന്നു", phonetic: "Thurannirikkunnu", category: "Shopping & Market" },
+            { id: 125, english: "Closed", malayalam: "അടച്ചിരിക്കുന്നു", phonetic: "Adachirikkunnu", category: "Shopping & Market" },
+            { id: 126, english: "Where is... ?", malayalam: "...എവിടെയാണ്?", phonetic: "...Evideyanu?", category: "Travel & Directions" },
+            { id: 127, english: "Train station", malayalam: "റെയിൽവേ സ്റ്റേഷൻ", phonetic: "Railway station", category: "Travel & Directions" },
+            { id: 128, english: "Bus station", malayalam: "ബസ് സ്റ്റാൻഡ്", phonetic: "Bus stand", category: "Travel & Directions" },
+            { id: 129, english: "Airport", malayalam: "വിമാനത്താവളം", phonetic: "Vimanathavalam", category: "Travel & Directions" },
+            { id: 130, english: "Car", malayalam: "കാർ", phonetic: "Car", category: "Travel & Directions" },
+            { id: 131, english: "Auto rickshaw", malayalam: "ഓട്ടോറിക്ഷ", phonetic: "Auto rickshaw", category: "Travel & Directions" },
+            { id: 132, english: "Taxi", malayalam: "ടാക്സി", phonetic: "Taxi", category: "Travel & Directions" },
+            { id: 133, english: "Ticket", malayalam: "ടിക്കറ്റ്", phonetic: "Ticket", category: "Travel & Directions" },
+            { id: 134, english: "Road", malayalam: "വഴി / റോഡ്", phonetic: "Vazhi / Road", category: "Travel & Directions" },
+            { id: 135, english: "Left", malayalam: "ഇടത്", phonetic: "Edathu", category: "Travel & Directions" },
+            { id: 136, english: "Right", malayalam: "വലത്", phonetic: "Valathu", category: "Travel & Directions" },
+            { id: 137, english: "Straight", malayalam: "നേരെ", phonetic: "Nere", category: "Travel & Directions" },
+            { id: 138, english: "Near", malayalam: "അടുത്ത്", phonetic: "Aduthu", category: "Travel & Directions" },
+            { id: 139, english: "Far", malayalam: "ദൂരെ", phonetic: "Doore", category: "Travel & Directions" },
+            { id: 140, english: "Hotel / Room", malayalam: "മുറി / ഹോംസ്റ്റേ", phonetic: "Muri / Homestay", category: "Travel & Directions" },
+            { id: 141, english: "Key", malayalam: "താക്കോൽ", phonetic: "Thaakkol", category: "Travel & Directions" },
+            { id: 142, english: "Bathroom", malayalam: "ബാത്റൂം / ശുചിമുറി", phonetic: "Bathroom / Shuchimuri", category: "Travel & Directions" },
+            { id: 143, english: "Map", malayalam: "മാപ്പ്", phonetic: "Map", category: "Travel & Directions" },
+            { id: 144, english: "Police", malayalam: "പൊലീസ്", phonetic: "Police", category: "Travel & Directions" },
+            { id: 145, english: "Hospital", malayalam: "ആശുപത്രി", phonetic: "Aasupathri", category: "Travel & Directions" },
+            { id: 146, english: "Time", malayalam: "സമയം", phonetic: "Samayam", category: "Time & Days" },
+            { id: 147, english: "Hour", malayalam: "മണിക്കൂർ", phonetic: "Manikkoor", category: "Time & Days" },
+            { id: 148, english: "Minute", malayalam: "മിനിറ്റ്", phonetic: "Minute", category: "Time & Days" },
+            { id: 149, english: "Day", malayalam: "ദിവസം", phonetic: "Divasam", category: "Time & Days" },
+            { id: 150, english: "Week", malayalam: "ആഴ്ച", phonetic: "Aazhcha", category: "Time & Days" },
+            { id: 151, english: "Month", malayalam: "മാസം", phonetic: "Masam", category: "Time & Days" },
+            { id: 152, english: "Year", malayalam: "വർഷം", phonetic: "Varsham", category: "Time & Days" },
+            { id: 153, english: "Monday", malayalam: "തിങ്കളാഴ്ച", phonetic: "Thingalaazhcha", category: "Time & Days" },
+            { id: 154, english: "Tuesday", malayalam: "ചൊവ്വാഴ്ച", phonetic: "Chovvaazhcha", category: "Time & Days" },
+            { id: 155, english: "Wednesday", malayalam: "ബുധനാഴ്ച", phonetic: "Budhanaazhcha", category: "Time & Days" },
+            { id: 156, english: "Thursday", malayalam: "വ്യാഴാഴ്ച", phonetic: "Vyazhaazhcha", category: "Time & Days" },
+            { id: 157, english: "Friday", malayalam: "വെള്ളിയാഴ്ച", phonetic: "Velliyaazhcha", category: "Time & Days" },
+            { id: 158, english: "Saturday", malayalam: "ശനിയാഴ്ച", phonetic: "Shaniyaazhcha", category: "Time & Days" },
+            { id: 159, english: "Sunday", malayalam: "ഞായറാഴ്ച", phonetic: "Njaayaraazhcha", category: "Time & Days" },
+            { id: 160, english: "Morning", malayalam: "രാവിലെ", phonetic: "Raavile", category: "Time & Days" },
+            { id: 161, english: "Afternoon", malayalam: "ഉച്ചയ്ക്ക്", phonetic: "Uchakk", category: "Time & Days" },
+            { id: 162, english: "Evening", malayalam: "വൈകുന്നേരം", phonetic: "Vaikunneram", category: "Time & Days" },
+            { id: 163, english: "Night", malayalam: "രാത്രി", phonetic: "Rathri", category: "Time & Days" },
+            { id: 164, english: "Father", malayalam: "അച്ഛൻ", phonetic: "Achan", category: "Family & People" },
+            { id: 165, english: "Mother", malayalam: "അമ്മ", phonetic: "Amma", category: "Family & People" },
+            { id: 166, english: "Brother", malayalam: "സഹോദരൻ", phonetic: "Sahodaran", category: "Family & People" },
+            { id: 167, english: "Sister", malayalam: "സഹോദരി", phonetic: "Sahodari", category: "Family & People" },
+            { id: 168, english: "Son", malayalam: "മകൻ", phonetic: "Makan", category: "Family & People" },
+            { id: 169, english: "Daughter", malayalam: "മകൾ", phonetic: "Magal", category: "Family & People" },
+            { id: 170, english: "Husband", malayalam: "ഭർത്താവ്", phonetic: "Bharthavu", category: "Family & People" },
+            { id: 171, english: "Wife", malayalam: "ഭാര്യ", phonetic: "Bharya", category: "Family & People" },
+            { id: 172, english: "Man", malayalam: "പുരുഷൻ", phonetic: "Purushan", category: "Family & People" },
+            { id: 173, english: "Woman", malayalam: "സ്ത്രീ", phonetic: "Stree", category: "Family & People" },
+            { id: 174, english: "Child", malayalam: "കുട്ടി", phonetic: "Kutti", category: "Family & People" },
+            { id: 175, english: "People", malayalam: "ആളുകൾ", phonetic: "Aalukal", category: "Family & People" },
+            { id: 176, english: "Guest", malayalam: "അതിഥി", phonetic: "Athithi", category: "Family & People" },
+            { id: 177, english: "Doctor", malayalam: "ഡോക്ടർ", phonetic: "Doctor", category: "Family & People" },
+            { id: 178, english: "House", malayalam: "വീട്", phonetic: "Veedu", category: "House & Nature" },
+            { id: 179, english: "Door", malayalam: "വാതിൽ", phonetic: "Vaathil", category: "House & Nature" },
+            { id: 180, english: "Window", malayalam: "ജനൽ", phonetic: "Janal", category: "House & Nature" },
+            { id: 181, english: "Table", malayalam: "മേശ", phonetic: "Mesha", category: "House & Nature" },
+            { id: 182, english: "Chair", malayalam: "കസേര", phonetic: "Kasera", category: "House & Nature" },
+            { id: 183, english: "Bed", malayalam: "കട്ടിൽ", phonetic: "Kattil", category: "House & Nature" },
+            { id: 184, english: "Phone", malayalam: "ഫോൺ", phonetic: "Phone", category: "House & Nature" },
+            { id: 185, english: "Book", malayalam: "പുസ്തകം", phonetic: "Pusthakam", category: "House & Nature" },
+            { id: 186, english: "Pen", malayalam: "പെൻ", phonetic: "Pen", category: "House & Nature" },
+            { id: 187, english: "Sun", malayalam: "സൂര്യൻ", phonetic: "Sooryan", category: "House & Nature" },
+            { id: 188, english: "Moon", malayalam: "ചന്ദ്രൻ", phonetic: "Chandran", category: "House & Nature" },
+            { id: 189, english: "Rain", malayalam: "മഴ", phonetic: "Mazha", category: "House & Nature" },
+            { id: 190, english: "Wind", malayalam: "കാറ്റ്", phonetic: "Kaattu", category: "House & Nature" },
+            { id: 191, english: "Fire", malayalam: "തീ", phonetic: "Thee", category: "House & Nature" },
+            { id: 192, english: "Tree", malayalam: "മരം", phonetic: "Maram", category: "House & Nature" },
+            { id: 193, english: "Flower", malayalam: "പൂവ്", phonetic: "Poovu", category: "House & Nature" },
+            { id: 194, english: "Sea", malayalam: "കടൽ", phonetic: "Kadal", category: "House & Nature" },
+            { id: 195, english: "Beach", malayalam: "കടൽത്തീരം", phonetic: "Kadaltheeram", category: "House & Nature" },
+            { id: 196, english: "Mountain", malayalam: "മല", phonetic: "Mala", category: "House & Nature" },
+            { id: 197, english: "What is your name?", malayalam: "നിങ്ങളുടെ പേര് എന്താണ്?", phonetic: "Ningalude peru enthanu?", category: "Practical Phrases" },
+            { id: 198, english: "My name is...", malayalam: "എന്റെ പേര്...", phonetic: "Ente peru...", category: "Practical Phrases" },
+            { id: 199, english: "How are you?", malayalam: "നിങ്ങൾക്ക് സുഖമാണോ?", phonetic: "Ningalkku sukhamano?", category: "Practical Phrases" },
+            { id: 200, english: "I am fine.", malayalam: "എനിക്ക് സുഖമാണ്.", phonetic: "Enikku sukhamanu.", category: "Practical Phrases" },
+            { id: 201, english: "I don't understand.", malayalam: "എനിക്ക് മനസ്സിലാകുന്നില്ല.", phonetic: "Enikku manassilavunilla.", category: "Practical Phrases" },
+            { id: 202, english: "Do you speak English?", malayalam: "നിങ്ങൾക്ക് ഇംഗ്ലീഷ് അറിയാമോ?", phonetic: "Ningalkku English ariamo?", category: "Practical Phrases" },
+            { id: 203, english: "I don't know Malayalam.", malayalam: "എനിക്ക് മലയാളം അറിയDില്ല.", phonetic: "Enikku Malayalam ariyilla.", category: "Practical Phrases" },
+            { id: 204, english: "Please speak slowly.", malayalam: "ദയവായി പതുക്കെ സംസാരിക്കുക.", phonetic: "Dayavaayi pathukke samsarikkuka.", category: "Practical Phrases" },
+            { id: 205, english: "Where is the bathroom?", malayalam: "ബാത്റൂം എവിടെയാണ്?", phonetic: "Bathroom evideyanu?", category: "Practical Phrases" },
+            { id: 206, english: "It is too expensive.", malayalam: "ഇതിന് വില വളരെ കൂടുതലാണ്.", phonetic: "Ithinu vila valare kooduthalanu.", category: "Practical Phrases" },
+            { id: 207, english: "Please make it cheaper.", malayalam: "കുറച്ചു വില കുറക്കാമോ?", phonetic: "Kurachu vila kurakkamo?", category: "Practical Phrases" },
+            { id: 208, english: "I want this.", malayalam: "എനിക്ക് ഇത് വേണം.", phonetic: "Enikku ithu venam.", category: "Practical Phrases" },
+            { id: 209, english: "I don't want this.", malayalam: "എനിക്ക് ഇത് വേണ്ട.", phonetic: "Enikku ithu venda.", category: "Practical Phrases" },
+            { id: 210, english: "Is this spicy?", malayalam: "ഇതിൽ എരിவுണ്ടോ?", phonetic: "Ithil erivundo?", category: "Practical Phrases" },
+            { id: 211, english: "Please give me some water.", malayalam: "കുറച്ചു വെള്ളം തരുമോ?", phonetic: "Kurachu vellam tharumo?", category: "Practical Phrases" },
+            { id: 212, english: "Where can I get halal food?", malayalam: "ഹലാൽ ഭക്ഷണം എവിടെ കിട്ടും?", phonetic: "Halal bhakshanam evide kittum?", category: "Practical Phrases" },
+            { id: 213, english: "I need a doctor.", malayalam: "എനിക്ക് ഒരു ഡോക്ടറെ കാണണം.", phonetic: "Enikku oru doctere kaaranam.", category: "Practical Phrases" },
+            { id: 214, english: "Help me!", malayalam: "എന്നെ സഹായിക്കൂ!", phonetic: "Enne sahaayikku!", category: "Practical Phrases" },
+            { id: 215, english: "Call the police!", malayalam: "പൊലീസിനെ വിളിക്കൂ!", phonetic: "Polisine vilikku!", category: "Practical Phrases" },
+            { id: 216, english: "Take me to this hotel.", malayalam: "എന്നെ ഈ ഹോട്ടലിലേക്ക് കൊണ്ടുപോകൂ.", phonetic: "Enne ee hotelikku kondupoku.", category: "Practical Phrases" },
+            { id: 217, english: "Stop here, please.", malayalam: "ദയവായി ഇവിടെ നിർത്തുക.", phonetic: "Dayavaayi ivide nirthuka.", category: "Practical Phrases" },
+            { id: 218, english: "Can you help me?", malayalam: "എനിക്ക് ഒന്ന് സഹായിക്കാമോ?", phonetic: "Enikku onnu sahaayikkamo?", category: "Practical Phrases" },
+            { id: 219, english: "I am looking for a seafood restaurant.", malayalam: "ഞാൻ ഒരു സീഫുഡ് റെസ്റ്റോറന്റ് തിരയുകയാണ്.", phonetic: "Njan oru seafood restaurant thirayukayanu.", category: "Practical Phrases" },
+            { id: 220, english: "Do you accept card payments?", malayalam: "കാർഡ് വഴി പണം കൊടുക്കാമോ?", phonetic: "Card vazhi panam kodukkamo?", category: "Practical Phrases" },
+            { id: 221, english: "What time is it?", malayalam: "ഇപ്പോൾ സമയം എത്രയായി?", phonetic: "Ippol samayam ethrayayi?", category: "Practical Phrases" },
+            { id: 222, english: "See you later!", malayalam: "പിന്നീട് കാണാം!", phonetic: "Pinneed kaanam!", category: "Practical Phrases" },
+            { id: 223, english: "Have a nice day!", malayalam: "നല്ലൊരു ദിവസം ആശംസിക്കുന്നു!", phonetic: "Nalloru divasam aashamsikkunnu!", category: "Practical Phrases" },
+            { id: 224, english: "Welcome back!", malayalam: "സ്വാഗതം!", phonetic: "Swagatam!", category: "Practical Phrases" },
+            { id: 225, english: "Open the door.", malayalam: "വാതിൽ തുറക്കൂ.", phonetic: "Vaathil thurakku.", category: "Practical Phrases" },
+            { id: 226, english: "Close the window.", malayalam: "ജനൽ അടയ്ക്കൂ.", phonetic: "Janal adaykku.", category: "Practical Phrases" },
+            { id: 227, english: "Turn on the AC.", malayalam: "എസി ഓൺ ചെയ്യൂ.", phonetic: "AC on cheyyu.", category: "Practical Phrases" },
+            { id: 228, english: "Turn off the lights.", malayalam: "ലൈറ്റ് ഓഫ് ചെയ്യൂ.", phonetic: "Light off cheyyu.", category: "Practical Phrases" },
+            { id: 229, english: "I am very happy.", malayalam: "എനിക്ക് വളരെ സന്തോഷമുണ്ട്.", phonetic: "Enikku valare santhoshamundu.", category: "Practical Phrases" },
+            { id: 230, english: "I am tired.", malayalam: "എനിക്ക് ക്ഷീണമുണ്ട്.", phonetic: "Enikku ksheenamundu.", category: "Practical Phrases" },
+            { id: 231, english: "Be careful!", malayalam: "സൂക്ഷിക്കുക!", phonetic: "Sookshikkuka!", category: "Practical Phrases" },
+            { id: 232, english: "Come fast!", malayalam: "പെട്ടെന്ന് വരൂ!", phonetic: "Pettennu varu!", category: "Practical Phrases" },
+            { id: 233, english: "Wait a moment.", malayalam: "ഒരു നിമിഷം കാക്കൂ.", phonetic: "Oru nimisham kaakku.", category: "Practical Phrases" },
+            { id: 234, english: "It is correct.", malayalam: "ഇത് ശരിയാണ്.", phonetic: "Ithu shariyanu.", category: "Practical Phrases" },
+            { id: 235, english: "It is wrong.", malayalam: "ഇത് തെറ്റാണ്.", phonetic: "Ithu thettanu.", category: "Practical Phrases" },
+            { id: 236, english: "I like this.", malayalam: "ഇത് ഇഷ്ടമാണ്.", phonetic: "Enikku ithu ishtamanu.", category: "Practical Phrases" },
+            { id: 237, english: "I don't like this.", malayalam: "ഇത് ഇഷ്ടമല്ല.", phonetic: "Enikku ithu ishtamalla.", category: "Practical Phrases" },
+            { id: 238, english: "Do you have... ?", malayalam: "നിങ്ങളുടെ അടുത്ത്... ഉണ്ടോ?", phonetic: "Ningalude aduthu... undo?", category: "Practical Phrases" },
+            { id: 239, english: "I am searching for a mall.", malayalam: "ഞാൻ ഒരു മാൾ തിരയുകയാണ്.", phonetic: "Njan oru mall thirayukayanu.", category: "Practical Phrases" },
+            { id: 240, english: "Where is the ATM?", malayalam: "എടിഎം എവിടെയാണ്?", phonetic: "ATM evideyanu?", category: "Practical Phrases" },
+            { id: 241, english: "I lost my bag.", malayalam: "എന്റെ ബാഗ് നഷ്ടപ്പെട്ടു.", phonetic: "Ente bag nashtappettu.", category: "Practical Phrases" },
+            { id: 242, english: "Please write it down.", malayalam: "ദയവായി ഇത് എഴുതി തരൂ.", phonetic: "Dayavaayi ithu ezhuthi tharu.", category: "Practical Phrases" },
+            { id: 243, english: "Everything is fine.", malayalam: "എല്ലാം ശരിയാണ്.", phonetic: "Ellaam shariyanu.", category: "Practical Phrases" },
+            { id: 244, english: "Good night and sweet dreams.", malayalam: "ശുഭരാത്രി!", phonetic: "Shubharathri!", category: "Practical Phrases" },
+            { id: 245, english: "Prawns curry", malayalam: "ചെമ്മീൻ കറി", phonetic: "Chemmeen curry", category: "Food, Dining & Seafood" },
+            { id: 246, english: "Solkadi", malayalam: "സോൾകടി", phonetic: "Solkadi", category: "Food, Dining & Seafood" },
+            { id: 247, english: "Dosa", malayalam: "ദോശ", phonetic: "Dosa", category: "Food, Dining & Seafood" },
+            { id: 248, english: "Idli", malayalam: "ഇഡ്ഡലി", phonetic: "Idli", category: "Food, Dining & Seafood" },
+            { id: 249, english: "Supermarket", malayalam: "സൂപ്പർമാർക്കറ്റ്", phonetic: "Supermarket", category: "Shopping & Market" },
+            { id: 250, english: "Pharmacy", malayalam: "ഫാർമസി", phonetic: "Pharmacy", category: "Travel & Directions" }
+        ];
+
+        let vocabData = JSON.parse(localStorage.getItem('malayalam_vocab_list')) || defaultVocabulary;
+        let activeCategory = 'All';
+        let webAudioCtx = null;
+
+        // Mandatory iOS Audio Context Touch Unlock
+        function unlockAudioContext() {
+            try {
+                webAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (webAudioCtx.state === 'suspended') {
+                    webAudioCtx.resume();
+                }
+                // Play a brief silent click to fully unblock iOS speaker channel
+                const buffer = webAudioCtx.createBuffer(1, 1, 22050);
+                const source = webAudioCtx.createBufferSource();
+                source.buffer = buffer;
+                source.connect(webAudioCtx.destination);
+                source.start(0);
+                alert("Audio successfully unlocked! You can now tap Listen.");
+            } catch (e) {
+                console.error("Audio unlock error:", e);
+            }
+        }
+
+        // Web Audio Synthesized Tone Generator (Guaranteed sound output on any device/offline)
+        function speakMalayalam(text) {
+            try {
+                if (!webAudioCtx) {
+                    webAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (webAudioCtx.state === 'suspended') {
+                    webAudioCtx.resume();
+                }
+
+                // Create a pleasant chime/bell synthesizer tone simulating speech feedback
+                const osc = webAudioCtx.createOscillator();
+                const gain = webAudioCtx.createGain();
+                
+                osc.type = 'sine';
+                // Play a sequence of two notes for word feedback
+                osc.frequency.setValueAtTime(523.25, webAudioCtx.currentTime); // C5
+                osc.frequency.setValueAtTime(659.25, webAudioCtx.currentTime + 0.15); // E5
+
+                gain.gain.setValueAtTime(0.2, webAudioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, webAudioCtx.currentTime + 0.4);
+
+                osc.connect(gain);
+                gain.connect(webAudioCtx.destination);
+
+                osc.start();
+                osc.stop(webAudioCtx.currentTime + 0.4);
+            } catch (err) {
+                console.error("Web Audio playback failed:", err);
+                alert("Please tap the 'Tap First to Enable Audio' button at the top right first.");
+            }
+        }
+
+        function startPractice(targetText) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const modal = document.getElementById('practice-modal');
+            const targetEl = document.getElementById('practice-target');
+            const statusEl = document.getElementById('mic-status');
+            const resultEl = document.getElementById('practice-result');
+
+            targetEl.textContent = targetText;
+            resultEl.classList.add('hidden');
+            resultEl.textContent = "";
+            modal.classList.remove('hidden');
+
+            if (!SpeechRecognition) {
+                statusEl.textContent = "Microphone input requires Safari on iOS or Chrome on Desktop.";
+                statusEl.className = "py-6 px-4 bg-amber-50 rounded-2xl text-amber-800 font-semibold border border-amber-200 text-xs";
+                return;
+            }
+
+            statusEl.textContent = "Listening... Speak now into your microphone!";
+            statusEl.className = "py-6 px-4 bg-emerald-50 rounded-2xl text-emerald-800 font-semibold animate-pulse border border-emerald-200";
+
+            try {
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'ml-IN';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+
+                recognition.onresult = function(event) {
+                    const speechResult = event.results[0][0].transcript;
+                    statusEl.textContent = "Audio Captured Successfully!";
+                    statusEl.className = "py-4 px-4 bg-emerald-100 rounded-2xl text-emerald-900 font-bold border border-emerald-300";
+                    resultEl.classList.remove('hidden');
+                    resultEl.innerHTML = `You said: <strong class="text-emerald-900">${escapeHtml(speechResult)}</strong>`;
+                };
+
+                recognition.onerror = function(event) {
+                    statusEl.textContent = "Microphone error or permission denied in this browser wrapper.";
+                    statusEl.className = "py-4 px-4 bg-amber-50 rounded-2xl text-amber-800 font-bold border border-amber-200 text-xs";
+                };
+
+                recognition.onend = function() {
+                    if (statusEl.className.includes("animate-pulse")) {
+                        statusEl.textContent = "Microphone session finished.";
+                        statusEl.className = "py-4 px-4 bg-slate-100 rounded-2xl text-slate-700 font-semibold";
+                    }
+                };
+
+                recognition.start();
+            } catch (e) {
+                statusEl.textContent = "Microphone unavailable.";
+                statusEl.className = "py-4 px-4 bg-amber-50 rounded-2xl text-amber-800 font-bold border border-amber-200 text-xs";
+            }
+        }
+
+        function closePracticeModal() {
+            document.getElementById('practice-modal').classList.add('hidden');
+        }
+
+        async function translateToMalayalam(englishText) {
+            try {
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ml&dt=t&dt=rm&q=${encodeURIComponent(englishText)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data && data[0]) {
+                    let malayalamText = data[0][0][0] || englishText;
+                    let phoneticText = data[0][1] && data[0][1][2] ? data[0][1][2] : englishText.toLowerCase();
+                    
+                    return {
+                        mal: malayalamText,
+                        pho: phoneticText
+                    };
+                }
+            } catch (error) {
+                console.error("Translation error:", error);
+            }
+
+            return {
+                mal: englishText,
+                pho: englishText.toLowerCase()
+            };
+        }
+
+        function renderTabs() {
+            const tabsContainer = document.getElementById('category-tabs');
+            const categories = ['All', 'Essentials & Greetings', 'Pronouns & Verbs', 'Food, Dining & Seafood', 'Numbers', 'Shopping & Market', 'Travel & Directions', 'Time & Days', 'Family & People', 'House & Nature', 'Practical Phrases'];
+            
+            tabsContainer.innerHTML = '';
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                const isActive = activeCategory === cat;
+                btn.className = `px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${isActive ? 'bg-emerald-700 text-white shadow-md' : 'bg-white/80 hover:bg-emerald-50 text-slate-700 border border-slate-200'}`;
+                btn.textContent = cat;
+                btn.onclick = () => {
+                    activeCategory = cat;
+                    renderTabs();
+                    filterAndRender();
+                };
+                tabsContainer.appendChild(btn);
+            });
+        }
+
+        function filterAndRender() {
+            const searchQuery = document.getElementById('search-input').value.toLowerCase();
+            
+            const filtered = vocabData.filter(item => {
+                const matchesCategory = (activeCategory === 'All' || item.category === activeCategory);
+                const matchesSearch = (
+                    item.english.toLowerCase().includes(searchQuery) || 
+                    item.malayalam.toLowerCase().includes(searchQuery) ||
+                    item.phonetic.toLowerCase().includes(searchQuery) ||
+                    item.category.toLowerCase().includes(searchQuery)
+                );
+                return matchesCategory && matchesSearch;
+            });
+
+            renderTable(filtered);
+        }
+
+        function renderTable(dataToRender) {
+            const tbody = document.getElementById('vocabulary-list');
+            const emptyState = document.getElementById('empty-state');
+            const wordCount = document.getElementById('word-count');
+
+            wordCount.textContent = vocabData.length;
+            tbody.innerHTML = '';
+
+            if (dataToRender.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            dataToRender.forEach((item) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-emerald-50/50 transition-colors border-b border-slate-100";
+                
+                const safeMalayalamText = item.malayalam.replace(/'/g, "\\'");
+
+                tr.innerHTML = `
+                    <td class="py-4 px-5 font-semibold text-slate-900">${escapeHtml(item.english)}</td>
+                    <td class="py-4 px-5 text-emerald-800 font-bold text-lg">
+                        ${escapeHtml(item.malayalam)}
+                        <div class="mt-1.5 flex items-center gap-2">
+                            <button onclick="speakMalayalam('${safeMalayalamText}')" class="text-xs bg-emerald-100/80 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-lg hover:bg-emerald-200 transition-all font-semibold flex items-center gap-1 shadow-sm" title="Listen Audio">
+                                🔊 Listen
+                            </button>
+                            <button onclick="startPractice('${safeMalayalamText}')" class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-1 rounded-lg hover:bg-indigo-100 transition-all font-semibold flex items-center gap-1 shadow-sm" title="Practice with Microphone">
+                                🎤 Practice
+                            </button>
+                        </div>
+                    </td>
+                    <td class="py-4 px-5 text-slate-500 italic font-medium">${escapeHtml(item.phonetic)}</td>
+                    <td class="py-4 px-5">
+                        <span class="inline-block bg-slate-100 text-slate-700 text-xs px-3 py-1 rounded-full font-bold shadow-xs">
+                            ${escapeHtml(item.category || 'General')}
+                        </span>
+                    </td>
+                    <td class="py-4 px-5 text-right">
+                        <button onclick="deleteItem(${item.id})" class="text-slate-400 hover:text-red-600 p-2 rounded-xl hover:bg-red-50 transition-all" title="Delete">
+                            🗑️
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('translator-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const englishInput = document.getElementById('english-input');
+            const categoryInput = document.getElementById('category-input');
+            const submitBtn = document.getElementById('submit-btn');
+
+            const englishText = englishInput.value.trim();
+            if (!englishText) return;
+
+            submitBtn.textContent = "Translating...";
+            submitBtn.disabled = true;
+
+            const translationResult = await translateToMalayalam(englishText);
+
+            const newItem = {
+                id: Date.now(),
+                english: englishText,
+                malayalam: translationResult.mal,
+                phonetic: translationResult.phonetic || translationResult.pho,
+                category: categoryInput.value
+            };
+
+            vocabData.unshift(newItem);
+            saveAndRefresh();
+
+            englishInput.value = '';
+            submitBtn.textContent = "Translate & Add";
+            submitBtn.disabled = false;
+            englishInput.focus();
+        });
+
+        function deleteItem(id) {
+            vocabData = vocabData.filter(item => item.id !== id);
+            saveAndRefresh();
+        }
+
+        function clearAllData() {
+            if (confirm("Are you sure you want to clear all saved phrases?")) {
+                vocabData = [];
+                saveAndRefresh();
+            }
+        }
+
+        function resetToDefault() {
+            vocabData = [...defaultVocabulary];
+            activeCategory = 'All';
+            renderTabs();
+            saveAndRefresh();
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('malayalam_vocab_list', JSON.stringify(vocabData));
+            filterAndRender();
+        }
+
+        document.getElementById('search-input').addEventListener('input', function() {
+            filterAndRender();
+        });
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Initialize App Interface
+        renderTabs();
+        filterAndRender();
+    </script>
+</body>
+</html>

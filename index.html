@@ -17,6 +17,7 @@
         }
         button {
             touch-action: manipulation;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -30,7 +31,7 @@
                     <span>🌴</span> Malayalam Master Voice App
                 </h1>
                 <p class="text-sm text-emerald-300 mt-1">
-                    Explore 250+ vocabulary words, native speech synthesis, and iOS voice practice
+                    Explore 250+ vocabulary words, audio pronunciation, and iOS voice practice
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
@@ -51,10 +52,10 @@
                     class="w-full bg-emerald-950/80 border border-emerald-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-inner">
             </div>
             <div class="flex items-center gap-2.5">
-                <button id="reloadDictBtn" class="bg-emerald-800/80 hover:bg-emerald-700 text-emerald-200 border border-emerald-600/60 px-4 py-2.5 rounded-xl text-sm font-semibold transition cursor-pointer shadow">
+                <button id="reloadDictBtn" class="bg-emerald-800/80 hover:bg-emerald-700 text-emerald-200 border border-emerald-600/60 px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow">
                     🔄 Reload Master Dictionary
                 </button>
-                <button id="clearAllBtn" class="bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 px-4 py-2.5 rounded-xl text-sm font-semibold transition cursor-pointer shadow">
+                <button id="clearAllBtn" class="bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow">
                     🗑️ Clear All
                 </button>
             </div>
@@ -91,7 +92,7 @@
                 <h3 class="text-lg font-bold text-emerald-300 flex items-center gap-2">
                     <span>🎙️</span> Voice Pronunciation Practice
                 </h3>
-                <button id="closeModalBtn" class="text-slate-400 hover:text-slate-200 text-2xl font-bold px-2 cursor-pointer">&times;</button>
+                <button id="closeModalBtn" class="text-slate-400 hover:text-slate-200 text-2xl font-bold px-2">&times;</button>
             </div>
 
             <div class="text-center space-y-2 py-2 bg-slate-950/60 border border-slate-800 rounded-2xl p-4">
@@ -110,16 +111,16 @@
             </div>
 
             <div class="flex justify-center pt-2 gap-3">
-                <button id="startRecordingBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-2xl shadow-xl transition flex items-center gap-2 cursor-pointer">
+                <button id="startRecordingBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-2xl shadow-xl transition flex items-center gap-2">
                     <span>🔴</span> Record Voice
                 </button>
-                <button id="stopRecordingBtn" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-6 py-3 rounded-2xl shadow-xl transition hidden items-center gap-2 cursor-pointer">
+                <button id="stopRecordingBtn" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-6 py-3 rounded-2xl shadow-xl transition hidden items-center gap-2">
                     <span>⏹️</span> Stop Recording
                 </button>
             </div>
 
             <div class="pt-3 border-t border-slate-800 flex justify-end">
-                <button id="closeModalActionBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-2.5 rounded-xl text-sm font-semibold transition cursor-pointer">
+                <button id="closeModalActionBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-2.5 rounded-xl text-sm font-semibold transition">
                     Close Practice Window
                 </button>
             </div>
@@ -160,7 +161,7 @@
             });
         }
 
-        const STORAGE_KEY = 'malayalam_vocab_data_v6';
+        const STORAGE_KEY = 'malayalam_vocab_data_v7';
         let vocabList = [];
 
         function initStorage() {
@@ -177,25 +178,22 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(vocabList));
         }
 
-        // Robust Speech Synthesis with iOS Safari compatibility bindings
-        function playPronunciation(malayalamText, pronunciationText) {
-            if (!('speechSynthesis' in window)) {
-                alert("Speech synthesis is not supported on this device.");
-                return;
-            }
-
-            window.speechSynthesis.cancel();
-
-            // Speak phonetic text first as primary fallback for iOS speech engine packages
-            const textToSpeak = pronunciationText && pronunciationText.length > 0 ? pronunciationText : malayalamText;
-            const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.rate = 0.85;
-            utterance.pitch = 1.0;
-
-            // Attempt setting Indian locale
-            utterance.lang = 'en-IN';
-
-            window.speechSynthesis.speak(utterance);
+        // Reliable Direct Speech Output Engine using HTML5 Audio & Google TTS Web API Endpoint
+        function playAudioPronunciation(text) {
+            const encoded = encodeURIComponent(text);
+            const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=ml&client=tw-ob`;
+            const audio = new Audio(audioUrl);
+            audio.play().catch(err => {
+                // Fallback to browser SpeechSynthesis API if network block occurs
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'ml-IN';
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    alert("Audio playback failed. Please check your network connection.");
+                }
+            });
         }
 
         const tableBody = document.getElementById('vocabTableBody');
@@ -219,27 +217,34 @@
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-emerald-800/35 transition border-b border-emerald-800/40';
                 
-                // Safe string escaping for inline handlers
-                const safeMalayalam = item.malayalam.replace(/'/g, "\\'");
-                const safePronunciation = item.pronunciation.replace(/'/g, "\\'");
-                const safeEnglish = item.english.replace(/'/g, "\\'");
-
                 tr.innerHTML = `
                     <td class="p-4.5 font-medium text-slate-100">${item.english}</td>
                     <td class="p-4.5 text-emerald-400 font-bold text-lg">${item.malayalam}</td>
                     <td class="p-4.5 text-emerald-300 italic">${item.pronunciation}</td>
                     <td class="p-4.5 text-right space-x-2 whitespace-nowrap">
-                        <button type="button" onclick="handleListen('${safeMalayalam}', '${safePronunciation}')" class="bg-emerald-800 hover:bg-emerald-700 active:bg-emerald-600 text-emerald-200 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer shadow">🔊 Listen</button>
-                        <button type="button" onclick="openPracticeModal('${safeEnglish}', '${safeMalayalam}')" class="bg-emerald-950 hover:bg-emerald-900 active:bg-emerald-800 text-emerald-300 border border-emerald-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer shadow">🎙️ Practice</button>
+                        <button type="button" class="listen-btn bg-emerald-800 hover:bg-emerald-700 active:bg-emerald-600 text-emerald-200 px-3.5 py-2 rounded-xl text-xs font-semibold transition shadow" data-text="${item.malayalam}">🔊 Listen</button>
+                        <button type="button" class="practice-btn bg-emerald-950 hover:bg-emerald-900 active:bg-emerald-800 text-emerald-300 border border-emerald-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition shadow" data-english="${item.english}" data-malayalam="${item.malayalam}">🎙️ Practice</button>
                     </td>
                 `;
                 tableBody.appendChild(tr);
             });
-        }
 
-        window.handleListen = function(malayalam, pronunciation) {
-            playPronunciation(malayalam, pronunciation);
-        };
+            // Attach clean event listeners dynamically to guarantee click response on iOS Safari
+            document.querySelectorAll('.listen-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const textToRead = e.currentTarget.getAttribute('data-text');
+                    playAudioPronunciation(textToRead);
+                });
+            });
+
+            document.querySelectorAll('.practice-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const eng = e.currentTarget.getAttribute('data-english');
+                    const mal = e.currentTarget.getAttribute('data-malayalam');
+                    openPracticeModal(eng, mal);
+                });
+            });
+        }
 
         const practiceModal = document.getElementById('practiceModal');
         const closeModalBtn = document.getElementById('closeModalBtn');
@@ -255,7 +260,7 @@
         let mediaRecorder;
         let audioChunks = [];
 
-        window.openPracticeModal = function(english, malayalam) {
+        function openPracticeModal(english, malayalam) {
             modalEnglishSub.textContent = english;
             modalMalayalamText.textContent = malayalam;
             practiceStatusBox.textContent = "Tap 'Record Voice' below, grant mic permissions when prompted, and clearly pronounce the Malayalam phrase.";
@@ -264,7 +269,7 @@
             startRecordingBtn.classList.remove('hidden');
             stopRecordingBtn.classList.add('hidden');
             practiceModal.classList.remove('hidden');
-        };
+        }
 
         function closeModals() {
             if (mediaRecorder && mediaRecorder.state === 'recording') {

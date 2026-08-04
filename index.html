@@ -31,6 +31,9 @@
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
+                <button id="unlockAudioBtn" class="bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold px-4 py-2.5 rounded-xl text-sm shadow-lg transition flex items-center gap-2 cursor-pointer">
+                    🔓 Tap First: Enable Audio
+                </button>
                 <div class="bg-emerald-900/90 border border-emerald-700/80 px-4 py-2.5 rounded-xl text-sm font-semibold text-emerald-200 shadow-inner">
                     📖 Stored Words: <span id="wordCount">0</span>
                 </div>
@@ -60,7 +63,7 @@
         <!-- Vocabulary Data Table Container -->
         <div class="bg-emerald-950/70 border border-emerald-800/80 rounded-2xl shadow-2xl overflow-hidden backdrop-blur">
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table class="w-full text-left border-collapse min-w-[600px]">
                     <thead>
                         <tr class="bg-emerald-900/90 border-b border-emerald-800 text-emerald-300 text-xs uppercase tracking-wider font-bold">
                             <th class="p-4.5">English</th>
@@ -157,7 +160,7 @@
             });
         }
 
-        const STORAGE_KEY = 'malayalam_vocab_data_v4';
+        const STORAGE_KEY = 'malayalam_vocab_data_v5';
         let vocabList = [];
 
         function initStorage() {
@@ -174,16 +177,40 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(vocabList));
         }
 
-        // Native Browser Speech Synthesis (Reliable on iOS Safari without beeps)
-        function playPronunciation(malayalamText) {
+        // Audio Unlock Handler for iOS Safari
+        const unlockBtn = document.getElementById('unlockAudioBtn');
+        unlockBtn.addEventListener('click', () => {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const dummy = new SpeechSynthesisUtterance(" ");
+                dummy.volume = 0;
+                window.speechSynthesis.speak(dummy);
+            }
+            unlockBtn.innerHTML = "✅ Audio Ready";
+            unlockBtn.classList.remove('bg-amber-400', 'hover:bg-amber-300', 'text-amber-950');
+            unlockBtn.classList.add('bg-emerald-700', 'text-emerald-100');
+        });
+
+        // Robust Speech Synthesis with Fallback to Pronunciation Text
+        function playPronunciation(malayalamText, fallbackText) {
             if (!('speechSynthesis' in window)) {
-                alert("Speech synthesis is not supported in this browser.");
+                alert("Speech synthesis not supported on this browser.");
                 return;
             }
-            window.speechSynthesis.cancel(); // Stop any ongoing speech
+            window.speechSynthesis.cancel();
+            
+            // Try reading Malayalam script first
             const utterance = new SpeechSynthesisUtterance(malayalamText);
-            utterance.lang = 'ml-IN'; // Malayalam India voice
-            utterance.rate = 0.9; // Natural speaking pace
+            utterance.lang = 'ml-IN';
+            utterance.rate = 0.85;
+            
+            utterance.onerror = () => {
+                // Fallback to English phonetic pronunciation if Malayalam voice package is missing on device
+                const fallbackUtterance = new SpeechSynthesisUtterance(fallbackText);
+                fallbackUtterance.lang = 'en-IN';
+                window.speechSynthesis.speak(fallbackUtterance);
+            };
+
             window.speechSynthesis.speak(utterance);
         }
 
@@ -212,7 +239,7 @@
                     <td class="p-4.5 text-emerald-400 font-bold text-lg">${item.malayalam}</td>
                     <td class="p-4.5 text-emerald-300 italic">${item.pronunciation}</td>
                     <td class="p-4.5 text-right space-x-2 whitespace-nowrap">
-                        <button onclick="handleListen('${item.malayalam.replace(/'/g, "\\'")}')" class="bg-emerald-800 hover:bg-emerald-700 text-emerald-200 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer shadow">🔊 Listen</button>
+                        <button onclick="handleListen('${item.malayalam.replace(/'/g, "\\'")}', '${item.pronunciation.replace(/'/g, "\\'")}')" class="bg-emerald-800 hover:bg-emerald-700 text-emerald-200 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer shadow">🔊 Listen</button>
                         <button onclick="openPracticeModal('${item.english.replace(/'/g, "\\'")}', '${item.malayalam.replace(/'/g, "\\'")}')" class="bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer shadow">🎙️ Practice</button>
                     </td>
                 `;
@@ -220,7 +247,9 @@
             });
         }
 
-        window.handleListen = function(text) { playPronunciation(text); };
+        window.handleListen = function(malayalam, pronunciation) { 
+            playPronunciation(malayalam, pronunciation); 
+        };
 
         const practiceModal = document.getElementById('practiceModal');
         const closeModalBtn = document.getElementById('closeModalBtn');

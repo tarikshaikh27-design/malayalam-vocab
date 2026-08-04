@@ -15,11 +15,6 @@
             background-position: center;
             background-attachment: fixed;
         }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen antialiased">
@@ -32,14 +27,10 @@
                     <span>🌴</span> Malayalam Master Voice App
                 </h1>
                 <p class="text-sm text-emerald-300 mt-1">
-                    Explore 250+ vocabulary words, high-precision audio pronunciations, and native iOS voice practice
+                    Explore 250+ vocabulary words, native speech synthesis, and iOS voice practice
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-                <!-- iOS Audio Unlock Button -->
-                <button id="unlockAudioBtn" class="bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold px-4 py-2.5 rounded-xl text-sm shadow-lg transition flex items-center gap-2 cursor-pointer">
-                    🔓 Tap First: Enable Audio (iPhone)
-                </button>
                 <div class="bg-emerald-900/90 border border-emerald-700/80 px-4 py-2.5 rounded-xl text-sm font-semibold text-emerald-200 shadow-inner">
                     📖 Stored Words: <span id="wordCount">0</span>
                 </div>
@@ -166,7 +157,7 @@
             });
         }
 
-        const STORAGE_KEY = 'malayalam_vocab_data_v3';
+        const STORAGE_KEY = 'malayalam_vocab_data_v4';
         let vocabList = [];
 
         function initStorage() {
@@ -183,38 +174,17 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(vocabList));
         }
 
-        let audioUnlocked = false;
-        const unlockBtn = document.getElementById('unlockAudioBtn');
-        
-        unlockBtn.addEventListener('click', () => {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
-            const buffer = audioCtx.createBuffer(1, 1, 22050);
-            const source = audioCtx.createBufferSource();
-            source.buffer = buffer;
-            source.connect(audioCtx.destination);
-            source.start(0);
-
-            audioUnlocked = true;
-            unlockBtn.innerHTML = "✅ Audio Unlocked";
-            unlockBtn.classList.remove('bg-amber-400', 'hover:bg-amber-300', 'text-amber-950');
-            unlockBtn.classList.add('bg-emerald-700', 'text-emerald-100');
-            alert("Audio successfully unlocked! You can now tap Listen.");
-        });
-
+        // Native Browser Speech Synthesis (Reliable on iOS Safari without beeps)
         function playPronunciation(malayalamText) {
-            const encodedText = encodeURIComponent(malayalamText);
-            const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=ml&client=tw-ob`;
-            const audio = new Audio(ttsUrl);
-            audio.play().catch(err => {
-                if ('speechSynthesis' in window) {
-                    const utterance = new SpeechSynthesisUtterance(malayalamText);
-                    utterance.lang = 'ml-IN';
-                    window.speechSynthesis.speak(utterance);
-                } else {
-                    alert("Unable to play audio stream.");
-                }
-            });
+            if (!('speechSynthesis' in window)) {
+                alert("Speech synthesis is not supported in this browser.");
+                return;
+            }
+            window.speechSynthesis.cancel(); // Stop any ongoing speech
+            const utterance = new SpeechSynthesisUtterance(malayalamText);
+            utterance.lang = 'ml-IN'; // Malayalam India voice
+            utterance.rate = 0.9; // Natural speaking pace
+            window.speechSynthesis.speak(utterance);
         }
 
         const tableBody = document.getElementById('vocabTableBody');
